@@ -28,7 +28,7 @@ print(result[:10])
 
 def makeGraph(result):
     plt.hist(result, bins=1000, density=True)
-    plt.title("Distribución Triangular: Simulada vs Teórica")
+    plt.title("Distribución")
     plt.xlabel("x")
     plt.ylabel("Densidad")
 
@@ -53,3 +53,7 @@ def inverse_cdf_trapezoidal( a, b, c, d):
         return d - np.sqrt((2 * (A3 - z) * (d - c)) / h)
     else:
         raise ValueError("u debe estar en el intervalo [0, 1]")
+    
+d = 7
+result = simulation(100000000, lambda: inverse_cdf_trapezoidal(d, a, c, b))
+makeGraph(result)
