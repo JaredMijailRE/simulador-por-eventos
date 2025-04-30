@@ -54,6 +54,7 @@ def inverse_cdf_trapezoidal( a, b, c, d):
     else:
         raise ValueError("u debe estar en el intervalo [0, 1]")
     
-d = 7
-result = simulation(100000000, lambda: inverse_cdf_trapezoidal(d, a, c, b))
-makeGraph(result)
+if __name__ == "__main__":
+    d = 7
+    result = simulation(100000000, lambda: inverse_cdf_trapezoidal(d, a, c, b))
+    makeGraph(result)

@@ -1,0 +1,9 @@
+[project]
+name = "simulador-por-eventos"
+version = "0.1.0"
+description = "Trabajo modelos y simulacion, generacion de variables aleatorias y simuladores por eventos"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "numba>=0.61.2",
+]
