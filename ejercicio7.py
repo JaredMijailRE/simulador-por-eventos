@@ -131,5 +131,5 @@ class SimuladorCafeteria:
 
 # Ejecutar la simulación
 if __name__ == "__main__":
-    simulator = QueueSimulator(mean_interarrival=10.0, mean_service=60.0, num_delays_required=1000)
+    simulator = SimuladorCafeteria(mean_interarrival=10.0, mean_service=60.0, num_delays_required=1000)
     simulator.run_simulation()
