@@ -16,4 +16,6 @@ for i in range(num_samples):
     clients.append(rand)
 
 print(type(clients[0]))
+
+
   
