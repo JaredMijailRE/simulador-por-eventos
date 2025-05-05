@@ -31,12 +31,16 @@ class Simulation_9:
         
 
         # Statistical Counters
-        sf.delayPort = None
-        sf.delayCrane = None
+        sf.num_Delay_Port = 0
+        sf.num_Delay_Crane = 0
+        sf.total_Delay_Port = 0
+        sf.total_Delay_Crane = 0
+        
+        
 
         # System state
-        sf.portStatus = None # 1: ocuppy, 0: free
-        sf.craneStatus = None # 1: ocuppy, 0: free
+        sf.portStatus = np.zeros(numPorts, dtype=np.int32) # 1: ocuppy, 0: free
+        sf.craneStatus = np.zeros(numCreanes, dtype=np.int32) # 1: ocuppy, 0: free
         sf.numDeparted = 0
 
         # Events 
@@ -46,20 +50,9 @@ class Simulation_9:
         # LLegada recarga
         # Salida recarga
 
-    def initialize(sf)-> None:
-        
-        # Inicializar el sistema
-        sf.clock = 0
-        sf.delayPort = 0
-        sf.delayCrane = 0
-        sf.portStatus = np.zeros(6, dtype=np.int32)
-        sf.craneStatus = np.zeros(5, dtype=np.int32)
-        
-
 
     def main(sf)-> np.ndarray:
         "main function to execute one simulation and get the results"
-        sf.initialize()
         
         while (sf.numDeparted < 100):
             eventType = sf.nextEventType()
@@ -74,39 +67,46 @@ class Simulation_9:
                 
         return sf.report()
         
+    def timing(sf)-> None:
+        "timing of the simulation"
 
-    def nextEventType(sf)-> int:
+    def update_time_stats(sf)-> None:
+        "update the time statistics"
+
+    def next_event_type(sf)-> int:
         "get the next event type"
         
 
-    def arrivalPort(sf)-> None:
+    def arrival_port(sf)-> None:
         "arrival of a port event"
 
 
-    def departurePort(sf)-> None:
+    def departure_port(sf)-> None:
         "departure of a port event"
 
 
-    def arrivalCrane(sf)-> None:
+    def arrival_crane(sf)-> None:
         "arrival of a crane event"
 
 
-    def departureCrane(sf)-> None:
+    def departure_crane(sf)-> None:
         "departure of a crane event"
 
 
     def report(sf)-> None:
         "give a report of the simulation"
     
-    def multipleSimulation(sf, nSimulations: int)-> None:
-        "run multiple simulations and get the results"
-        
-        results = np.zeros((nSimulations, 5), dtype=np.float64)
-        for i in range(nSimulations):
-            results[i] = sf.main()
-        return results.mean(axis=0), results.std(axis=0)
 
-def generateReport(sf, results: np.ndarray)-> None:
+def multiple_simulation(nSimulations: int)-> np.ndarray:
+    "run multiple simulations and get the results"
+    
+    results = np.zeros((nSimulations, 5), dtype=np.float64)
+    for i in range(nSimulations):
+        sf = Simulation_9()
+        results[i] = sf.main()
+    return results.mean(axis=0), results.std(axis=0)
+
+def generate_report(sf, results: np.ndarray)-> None:
     "generate a report of results in a file"
 
 
