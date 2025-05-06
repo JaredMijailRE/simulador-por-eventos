@@ -1,5 +1,7 @@
 import numpy as np
+import random
 from numba.experimental import jitclass 
+import heapq as hq
 
 @jitclass
 class Simulation_9:
@@ -8,26 +10,31 @@ class Simulation_9:
         # Simulation parameters
         numCreanes = 5
         numPorts = 6
+        sf.arrival_time = lambda: random.uniform(0.5, 1.5)
+        sf.loading_time = lambda: random.uniform(0.5, 1.5)
+        sf.unloading_time = lambda: random.uniform(4.5, 9.5)
+        loading_probability = 0.1
+        sf.will_load = lambda: random.random() < loading_probability
+
+        # Event types           
+        sf.INIT_SIMULATION = 0
+        sf.ARRIVAL_PORT = 1
+        sf.DEPARTURE_PORT = 2
+        sf.ARRIVAL_CRANE = 3
+        sf.END_SIMULATION = 4
         
-        ARRIVAL_PORT = 1
-        DEPARTURE_PORT = 2
-        ARRIVAL_CRANE = 3
-        DEPARTURE_CRANE = 4
-        
-        # Constants
+        # State Types
         sf.OCCUPIED = 1
         sf.FREE = 0
 
 
         # Program state
         sf.clock = None
-        sf.eventList = []        
-        
-        sf.arrivalPortHeap = []
-        sf.departurePortHeap = []
-        sf.arrivalCraneHeap = []
-        sf.departureCraneHeap = []
-
+        sf.eventQueue = []
+        sf.portQueue = []
+        sf.craneQueue = []
+        sf.unloadHeap = []
+        sf.loadHeap = []
         
 
         # Statistical Counters
@@ -35,21 +42,11 @@ class Simulation_9:
         sf.num_Delay_Crane = 0
         sf.total_Delay_Port = 0
         sf.total_Delay_Crane = 0
-        
-        
 
         # System state
         sf.portStatus = np.zeros(numPorts, dtype=np.int32) # 1: ocuppy, 0: free
         sf.craneStatus = np.zeros(numCreanes, dtype=np.int32) # 1: ocuppy, 0: free
         sf.numDeparted = 0
-
-        # Events 
-        # Inicializacion
-        # LLegada puerto
-        # Salida puerto
-        # LLegada recarga
-        # Salida recarga
-
 
     def main(sf)-> np.ndarray:
         "main function to execute one simulation and get the results"
@@ -80,18 +77,21 @@ class Simulation_9:
     def arrival_port(sf)-> None:
         "arrival of a port event"
 
+        hq.heappush(sf.eventQueue, (sf.clock + sf.arrival_time()), sf.ARRIVAL_PORT)
+
+    
+        if(sf.will_load()):
+            hq.heappush(sf.eventQueue, (sf.clock + sf.unloading_time()), sf.ARRIVAL_CRANE)
+
+        else:
+            hq.heappush(sf.eventQueue, (sf.clock + sf.unloading_time()), sf.DEPARTURE_PORT)
+
 
     def departure_port(sf)-> None:
         "departure of a port event"
 
-
     def arrival_crane(sf)-> None:
         "arrival of a crane event"
-
-
-    def departure_crane(sf)-> None:
-        "departure of a crane event"
-
 
     def report(sf)-> None:
         "give a report of the simulation"
