@@ -5,6 +5,8 @@ description = "Trabajo modelos y simulacion, generacion de variables aleatorias 
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "ipykernel>=6.29.5",
     "matplotlib>=3.10.1",
     "numba>=0.61.2",
+    "numpy>=2.2.5",
 ]
