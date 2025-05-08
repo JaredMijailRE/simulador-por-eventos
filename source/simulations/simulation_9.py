@@ -15,64 +15,63 @@ class Simulation_9:
         sf.unloading_time = lambda: random.uniform(4.5, 9.5)
         loading_probability = 0.1
         sf.will_load = lambda: random.random() < loading_probability
+        sf.are_ports_free = lambda: len(sf.portQueue) < numPorts
+        sf.are_cranes_free = lambda: len(sf.craneQueue) < numCreanes
 
         # Event types           
         sf.INIT_SIMULATION = 0
         sf.ARRIVAL_PORT = 1
-        sf.DEPARTURE_PORT = 2
-        sf.ARRIVAL_CRANE = 3
-        sf.END_SIMULATION = 4
-        
-        # State Types
-        sf.OCCUPIED = 1
-        sf.FREE = 0
-
+        sf.DEPARTURE_CRANE = 2
+        sf.DEPARTURE_PORT = 3
 
         # Program state
-        sf.clock = None
+        sf.clock = 0.0
         sf.eventQueue = []
+        
+
+        # Statistical Counters
+        sf.num_Delay_Port = []
+        sf.num_Delay_Crane = []
+        sf.num_Load_Time = []
+        sf.num_Unload_Time = []
+
+
+        # System state
         sf.portQueue = []
         sf.craneQueue = []
         sf.unloadHeap = []
         sf.loadHeap = []
-        
-
-        # Statistical Counters
-        sf.num_Delay_Port = 0
-        sf.num_Delay_Crane = 0
-        sf.total_Delay_Port = 0
-        sf.total_Delay_Crane = 0
-
-        # System state
-        sf.portStatus = np.zeros(numPorts, dtype=np.int32) # 1: ocuppy, 0: free
-        sf.craneStatus = np.zeros(numCreanes, dtype=np.int32) # 1: ocuppy, 0: free
-        sf.numDeparted = 0
 
     def main(sf)-> np.ndarray:
         "main function to execute one simulation and get the results"
         
         while (sf.numDeparted < 100):
             eventType = sf.nextEventType()
-            if (eventType == 1):
+            if (eventType == sf.INIT_SIMULATION):
+                sf.start_simulation()
+            elif (eventType == sf.ARRIVAL_PORT):
                 sf.arrivalPort()
-            elif (eventType == 2):
-                sf.departurePort()
-            elif (eventType == 3):
-                sf.arrivalCrane()
-            elif (eventType == 4):
-                sf.departureCrane()
+            elif (eventType == sf.DEPARTURE_CRANE):
+                sf.departure_crane()
+            elif (eventType == sf.DEPARTURE_PORT):
+                sf.departure_port()
+            
+
+        sf.end_simulation()
                 
         return sf.report()
-        
-    def timing(sf)-> None:
-        "timing of the simulation"
-
-    def update_time_stats(sf)-> None:
-        "update the time statistics"
+    
+    def timing(sf, move: float)-> float:
+        "update the current time of the simulation"
 
     def next_event_type(sf)-> int:
         "get the next event type"
-        
+
+    def start_simulation(sf)-> None:
+        "start the simulation"
+
+    def end_simulation(sf)-> None:
+        "end the simulation"
 
     def arrival_port(sf)-> None:
         "arrival of a port event"
@@ -86,12 +85,11 @@ class Simulation_9:
         else:
             hq.heappush(sf.eventQueue, (sf.clock + sf.unloading_time()), sf.DEPARTURE_PORT)
 
+    def departure_crane(sf)-> None:
+        "departure of a crane event"
 
     def departure_port(sf)-> None:
         "departure of a port event"
-
-    def arrival_crane(sf)-> None:
-        "arrival of a crane event"
 
     def report(sf)-> None:
         "give a report of the simulation"
