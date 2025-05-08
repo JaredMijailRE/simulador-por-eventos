@@ -5,21 +5,26 @@ class SimuladorAlmacen:
         self.QLIMIT = params['num_delays_required']
         self.BUSY = 1
         self.IDLE = 0
+        self.OPEN = 1
+        self.CLOSED = 0
         self.next_event_type = 0
         self.num_custs_delayed = 0
         self.num_delays_required = params['num_delays_required']
         self.num_events = 0
         self.num_in_q = 0
         self.server_status = 0
+        self.store_status = 0
         self.area_num_in_q = 0.0
         self.area_server_status = 0.0
         self.mean_interarrival = params['mean_interarrival']
         self.mean_service = params['mean_service']
+        self.time_limit = params['time_limit']
         self.sim_time = 0.0
         self.time_arrival = np.zeros(self.QLIMIT + 1)
         self.time_last_event = 0.0
         self.time_next_event = [0.0] * (self.num_events + 1)  
         self.total_of_delays = 0.0
+    
 
     @staticmethod
     def exponential(beta):
@@ -30,6 +35,7 @@ class SimuladorAlmacen:
     def initialize(self):
         self.sim_time = 0.0
         self.server_status = self.IDLE
+        self.store_status = self.OPEN
         self.num_in_q = 0
         self.time_last_event = 0.0
         self.num_custs_delayed = 0
@@ -50,22 +56,27 @@ class SimuladorAlmacen:
         if self.next_event_type == 0:
             print("Event list is empty at time", self.sim_time)
             return
+        if min_time_next_event > self.time_limit:
+            self.store_status = self.CLOSED
         self.sim_time = min_time_next_event
 
     def arrive(self):
-        self.time_next_event[1] = self.sim_time + self.exponential(self.mean_interarrival)
-        if self.server_status == self.BUSY:
-            self.num_in_q += 1
-            if self.num_in_q > self.QLIMIT:
-                print("Overflow of the queue at time", self.sim_time)
+        if self.store_status == self.OPEN:
+            self.time_next_event[1] = self.sim_time + self.exponential(self.mean_interarrival)
+            if self.server_status == self.BUSY:
+                self.num_in_q += 1
+                if self.num_in_q > self.QLIMIT:
+                    print("Overflow of the queue at time", self.sim_time)
+                else:
+                    self.time_arrival[self.num_in_q] = self.sim_time
             else:
-                self.time_arrival[self.num_in_q] = self.sim_time
+                delay = 0.0
+                self.total_of_delays += delay
+                self.num_custs_delayed += 1
+                self.server_status = self.BUSY
+                self.time_next_event[2] = self.sim_time + self.exponential(self.mean_service)
         else:
-            delay = 0.0
-            self.total_of_delays += delay
-            self.num_custs_delayed += 1
-            self.server_status = self.BUSY
-            self.time_next_event[2] = self.sim_time + self.exponential(self.mean_service)
+            self.time_next_event[1] = float('inf')
         
     def depart(self):
         delay = 0
@@ -86,6 +97,7 @@ class SimuladorAlmacen:
         print("Average number in queue:", self.area_num_in_q / self.sim_time)
         print("Server utilization:", self.area_server_status/self.num_custs_delayed)
         print("Total simulation time:", self.sim_time)
+        print("Time server can depart since store closes: ", self.sim_time - self.time_limit)
         
     def update_time_avg_stats(self):
         time_since_last_event = self.sim_time - self.time_last_event
@@ -98,9 +110,11 @@ class SimuladorAlmacen:
         print("Single Server Queue Simulation\n\n")
         print("Mean interarrival time: ", self.mean_interarrival)
         print("Mean service time: ", self.mean_service)
-        print("Number of customers to be served: ", self.num_delays_required)
         self.initialize()
-        while self.num_custs_delayed < self.num_delays_required:
+        while (self.sim_time < self.time_limit) or (self.num_in_q > 0):
+            if self.sim_time >= self.time_limit:
+                self.store_status = self.CLOSED
+                self.time_next_event[1] = float('inf')
             self.timing()
             self.update_time_avg_stats()
             if self.next_event_type == 1:
@@ -112,9 +126,10 @@ class SimuladorAlmacen:
 if __name__ == "__main__":
     # Parámetros: tiempo entre llegadas, tiempo servicio1, tiempo servicio2, prob servicio1, clientes requeridos
     params = {
-        'mean_interarrival': 1.0,
+        'mean_interarrival': 3.0,
         'mean_service': 0.5,
-        'num_delays_required': 1000
+        'num_delays_required': 1000,
+        'time_limit': 480.0
     }
     simulator = SimuladorAlmacen(params)
     simulator.main()              
