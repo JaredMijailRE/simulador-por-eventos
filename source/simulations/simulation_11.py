@@ -1,4 +1,6 @@
 import numpy as np
+import multiprocessing
+from concurrent.futures import ProcessPoolExecutor
 
 class SimuladorAlmacen:
     def __init__(self, params):
@@ -239,6 +241,7 @@ class SimuladorAlmacen:
             elif 2 <= self.next_event_type <= self.num_events:
                 self.depart()
         self.report()
+
 
 if __name__ == "__main__":
     params = {
