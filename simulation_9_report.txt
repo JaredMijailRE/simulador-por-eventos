@@ -1,0 +1,26 @@
+Simulation 9 - Port and Crane Statistics Report
+==================================================
+
+Mean Values (across simulations):
+------------------------------
+Port Delay (ships): 24.6799 hours
+Crane Delay (ships): 0.0239 hours
+Load Time (ships): 1.0000 hours
+Unload Time (ships): 7.5002 hours
+Departed Ships (total per sim): 100
+Average Simulation Clock: 156.8931 hours
+Average Inter-Arrival Time (ships): 1.0005 hours
+Time-Avg Ships in Port Queue: 25.1343
+Time-Avg Ships in Crane Queue: 0.0160
+Port Utilization: 98.35%
+Crane Utilization: 97.45%
+
+Simulation Parameters (per single run):
+------------------------------
+Number of Cranes: 5
+Number of Ports: 6
+Arrival Time: Uniform(0.5, 1.5) hours
+Loading Time: Uniform(0.5, 1.5) hours
+Unloading Time: Uniform(4.5, 10.5) hours
+Loading Probability: 10%
+Target Ships per Simulation: 100
