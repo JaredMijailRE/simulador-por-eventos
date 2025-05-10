@@ -1,4 +1,3 @@
-
 import random
 import math
 
@@ -113,4 +112,10 @@ class SimuladorTaller:
         print(f"Costos: $ {int(self.costos)}")
         print(f"Neto: $ {int(neto)}")
 
-SimuladorTaller(16,5,4, semilla=1356).run()
+(f"{SimuladorTaller(8,5,1, semilla=1356).run()}")
+print()
+(f"{SimuladorTaller(16,5,1, semilla=1356).run()}")
+print()
+(f"{SimuladorTaller(16,5,2, semilla=1356).run()}")
+print()
+(f"{SimuladorTaller(8,6.48,1, semilla=1356).run()}")
