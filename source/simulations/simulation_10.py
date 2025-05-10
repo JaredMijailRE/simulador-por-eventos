@@ -511,8 +511,8 @@ if __name__ == '__main__':
     ARRIVE_UNIFORM_RANGE = (5, 15)   # Rango de tiempo de llegada al area de servicio (en segundos)
     HOT_SERVICE_PROBABILITY = 0.8  # Probabilidad de que un cliente elija el area de servicio de comida caliente
     ATTENTION_TIMES = np.array([60,30], dtype=np.int32)  # Tiempo para comida caliente y para sandwich (en segundos)
-    EATING_HOT_UNIFORM_RANGE = (20, 40)  # Rango de tiempo de consumo para comida caliente (en segundos)
-    EATING_SANDWICH_UNIFORM_RANGE = (10, 20)  # Rango de tiempo de consumo para sandwich (en segundos)
+    EATING_HOT_UNIFORM_RANGE = (20*60, 40*60)  # Rango de tiempo de consumo para comida caliente (en segundos)
+    EATING_SANDWICH_UNIFORM_RANGE = (10*60, 20*60)  # Rango de tiempo de consumo para sandwich (en segundos)
     CAPACITY = 200  # Capacidad del area de consumo
     NUM_CLIENTS_REQUIRED = 1000  # Numero de clientes a procesar completamente
     NUM_EMPLOYEES_HOT = 6  # Numero de empleados en el area de servicio de comida caliente

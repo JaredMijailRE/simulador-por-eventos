@@ -1,0 +1,163 @@
+
+
+Parameters
+
+  Capacity of the consumption area: 200 clients
+
+  Service attention time for hot food area: 60.00 seconds
+
+  Service attention time for sandwich area: 30.00 seconds
+
+
+Reports of the first experiments are shown (3 of 100):
+
+
+
+------------------------------ Simulation 1 ------------------------------
+Statistics
+
+
+  Average delay in the service area: 8.11 seconds
+    Average delay for the hot food service area: 0.63 seconds
+    Average delay for the sandwich service area: 31.68 seconds
+
+  Average time consuming: 1555.61 seconds
+
+  Average time in the system: 1616.78 seconds
+
+  Average number in service queue: 0.85 clients
+    Average number in hot food service queue: 0.05 clients
+    Average number in sandwich service queue: 0.80 clients
+
+  Average number in consumption area (consuming): 151.07 clients
+
+  Employees occupation: 78.50 %
+    Hot food service employees occupation: 79.00 %
+      - Employee 1 occupation: 89.57 %
+      - Employee 2 occupation: 88.29 %
+      - Employee 3 occupation: 84.45 %
+      - Employee 4 occupation: 81.00 %
+      - Employee 5 occupation: 75.03 %
+      - Employee 6 occupation: 55.64 %
+    Sandwich service employee occupation: 75.55 %
+      - Employee 7 occupation: 75.55 %
+
+  Consumption area utilization: 75.54 %
+
+Time simulation ended: 11277.66 seconds | 187.96 minutes | 3.13 hours
+
+Totally served number: 1000 clients
+
+
+
+------------------------------ Simulation 2 ------------------------------
+Statistics
+
+
+  Average delay in the service area: 7.30 seconds
+    Average delay for the hot food service area: 1.30 seconds
+    Average delay for the sandwich service area: 27.24 seconds
+
+  Average time consuming: 1557.69 seconds
+
+  Average time in the system: 1617.61 seconds
+
+  Average number in service queue: 0.77 clients
+    Average number in hot food service queue: 0.10 clients
+    Average number in sandwich service queue: 0.66 clients
+
+  Average number in consumption area (consuming): 153.05 clients
+
+  Employees occupation: 79.56 %
+    Hot food service employees occupation: 80.65 %
+      - Employee 1 occupation: 91.19 %
+      - Employee 2 occupation: 89.94 %
+      - Employee 3 occupation: 87.62 %
+      - Employee 4 occupation: 83.05 %
+      - Employee 5 occupation: 73.14 %
+      - Employee 6 occupation: 58.94 %
+    Sandwich service employee occupation: 73.03 %
+      - Employee 7 occupation: 73.03 %
+
+  Consumption area utilization: 76.53 %
+
+Time simulation ended: 11132.85 seconds | 185.55 minutes | 3.09 hours
+
+Totally served number: 1000 clients
+
+
+
+------------------------------ Simulation 3 ------------------------------
+Statistics
+
+
+  Average delay in the service area: 8.88 seconds
+    Average delay for the hot food service area: 1.64 seconds
+    Average delay for the sandwich service area: 31.30 seconds
+
+  Average time consuming: 1554.75 seconds
+
+  Average time in the system: 1616.36 seconds
+
+  Average number in service queue: 0.93 clients
+    Average number in hot food service queue: 0.13 clients
+    Average number in sandwich service queue: 0.80 clients
+
+  Average number in consumption area (consuming): 152.38 clients
+
+  Employees occupation: 78.89 %
+    Hot food service employees occupation: 79.24 %
+      - Employee 1 occupation: 91.20 %
+      - Employee 2 occupation: 88.29 %
+      - Employee 3 occupation: 85.88 %
+      - Employee 4 occupation: 80.97 %
+      - Employee 5 occupation: 74.22 %
+      - Employee 6 occupation: 54.89 %
+    Sandwich service employee occupation: 76.78 %
+      - Employee 7 occupation: 76.78 %
+
+  Consumption area utilization: 76.19 %
+
+Time simulation ended: 11041.23 seconds | 184.02 minutes | 3.07 hours
+
+Totally served number: 1000 clients
+----------------------------------------------------------------------------
+
+
+
+
+============================== Final Summary ===============================
+
+
+Statistics (Average of 100 experiments)
+
+  Average delay in the service area: 8.39 seconds
+    Average delay for the hot food service area: 1.20 seconds
+    Average delay for the sandwich service area: 31.09 seconds
+
+  Average time consuming: 1557.15 seconds
+
+  Average time in the system: 1618.30 seconds
+
+  Average number in service queue: 0.88 clients
+    Average number in hot food service queue: 0.10 clients
+    Average number in sandwich service queue: 0.79 clients
+
+  Average number in consumption area (consuming): 152.65 clients
+
+  Employees occupation: 79.10 %
+    Hot food service employees occupation: 79.68 %
+      - Employee 1 occupation: 90.57 %
+      - Employee 2 occupation: 88.90 %
+      - Employee 3 occupation: 86.30 %
+      - Employee 4 occupation: 81.84 %
+      - Employee 5 occupation: 73.40 %
+      - Employee 6 occupation: 57.07 %
+    Sandwich service employee occupation: 75.63 %
+      - Employee 7 occupation: 75.63 %
+
+  Consumption area utilization: 76.32 %
+
+Time simulation ended: 11141.23 seconds | 185.69 minutes | 3.09 hours
+
+Totally served number: 1000.0 clients
