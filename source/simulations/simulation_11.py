@@ -1,6 +1,8 @@
 import numpy as np
 import multiprocessing
 from concurrent.futures import ProcessPoolExecutor
+import matplotlib.pyplot as plt
+import time
 
 class SimuladorAlmacen:
     def __init__(self, params):
@@ -50,6 +52,7 @@ class SimuladorAlmacen:
         self.queue_times = np.zeros(self.num_service_types + 1)
         self.sales_by_service = np.zeros(self.num_service_types + 1)
         self.service_type_arrival = np.zeros(self.QLIMIT + 1)
+        self.results = {}
     
     @staticmethod
     def exponential(beta):
@@ -196,41 +199,50 @@ class SimuladorAlmacen:
         self.area_server_status += busy_servers * time_since_last_event
 
     def report(self):
-        'Generador del reporte'
-        print("\n--- Estadísticas Generales ---")
-        print("Demora promedio en cola:", self.total_of_delays / self.num_custs_delayed)
-        print("Número promedio en cola:", self.area_num_in_q / self.sim_time)
-        print("Utilización del servidor:", self.area_server_status / (self.num_servers * self.sim_time))
-        print("Tiempo total de simulación:", self.sim_time)
-        print("Tiempo desde cierre hasta último cliente:", max(0, self.sim_time - self.time_limit))
-        print("Ingresos totales:", self.area_total_income)
-        print("Venta promedio por cliente:", self.area_total_income / self.num_custs_delayed)
-        
-        print("\n--- Estadísticas por Tipo de Servicio ---")
+        """Genera un diccionario con los resultados en lugar de imprimirlos."""
+        results = {
+            "general_stats": {
+                "avg_delay": self.total_of_delays / self.num_custs_delayed,
+                "avg_num_in_queue": self.area_num_in_q / self.sim_time,
+                "server_utilization": self.area_server_status / (self.num_servers * self.sim_time),
+                "total_sim_time": self.sim_time,
+                "time_after_close": max(0, self.sim_time - self.time_limit),
+                "total_income": self.area_total_income,
+                "avg_sale_per_client": self.area_total_income / self.num_custs_delayed
+            },
+            "service_stats": {}
+        }
+
         service_names = {
             self.SERVICE_A: "Servicio A (Uniforme)",
             self.SERVICE_B: "Servicio B (Exponencial)",
             self.NO_SERVICE: "Sin Servicio"
         }
+
         for service_type in [self.SERVICE_A, self.SERVICE_B, self.NO_SERVICE]:
             count = self.service_counts[service_type]
             if count > 0:
-                print(f"\n{service_names[service_type]}:")
-                print(f"  Clientes atendidos: {int(count)}")
-                print(f"  Tiempo total de servicio: {self.service_times[service_type]:.2f}")
-                print(f"  Tiempo promedio de servicio: {self.service_times[service_type]/count:.2f}")
-                print(f"  Tiempo total en cola: {self.queue_times[service_type]:.2f}")
-                print(f"  Tiempo promedio en cola: {self.queue_times[service_type]/count:.2f}")
-                print(f"  Proporción de clientes: {count/self.num_custs_delayed:.2%}")
-                print(f"  Ventas totales: ${self.sales_by_service[service_type]:.2f}")
+                results["service_stats"][service_names[service_type]] = {
+                    "clients_served": int(count),
+                    "total_service_time": float(self.service_times[service_type]),
+                    "avg_service_time": float(self.service_times[service_type]/count),
+                    "total_queue_time": float(self.queue_times[service_type]),
+                    "avg_queue_time": float(self.queue_times[service_type]/count),
+                    "client_proportion": float(count/self.num_custs_delayed),
+                    "total_sales": float(self.sales_by_service[service_type])
+                }
             else:
-                print(f"\n{service_names[service_type]}: Sin clientes")
+                results["service_stats"][service_names[service_type]] = {
+                    "clients_served": 0,
+                    "message": "Sin clientes"
+                }
+
+        self.results = results  # Almacenamos los resultados
+        return results
 
     def main(self):
-        print("Simulación de Cola con Múltiples Servidores\n\n")
         self.initialize()
         while self.sim_time < self.time_limit or self.num_in_q > 0 or any(status == self.BUSY for status in self.server_status):
-            # Programa normal ejecuta mientras la tienda esté abierta, o cerrada con clientes pendientes
             self.timing()
             if self.sim_time > self.time_limit:
                 self.store_status = self.CLOSED
@@ -240,12 +252,13 @@ class SimuladorAlmacen:
                 self.arrive()
             elif 2 <= self.next_event_type <= self.num_events:
                 self.depart()
-        self.report()
+        return self.report() 
 
-
-if __name__ == "__main__":
+def run_simulation_batch(n, servers):
+    results = np.zeros((n, 28), dtype=np.float64)
+    
     params = {
-        'num_servers': 2,  # Ejemplo: 2 servidores
+        'num_servers': servers,
         'mean_interarrival': 3.0,
         'mean_service_A_inf': 3.1,
         'mean_service_A_sup': 3.8,
@@ -259,5 +272,109 @@ if __name__ == "__main__":
         'sales_B': 4000,
         'sales_no_service': 0
     }
-    simulator = SimuladorAlmacen(params)
-    simulator.main()
+    
+    for i in range(n):
+        simulator = SimuladorAlmacen(params)
+        sim_results = simulator.main()
+        
+        # Estadísticas generales (7 valores)
+        general = sim_results["general_stats"]
+        results[i, 0] = general["avg_delay"]
+        results[i, 1] = general["avg_num_in_queue"]
+        results[i, 2] = general["server_utilization"]
+        results[i, 3] = general["total_sim_time"]
+        results[i, 4] = general["time_after_close"]
+        results[i, 5] = general["total_income"]
+        results[i, 6] = general["avg_sale_per_client"]
+        
+        # Estadísticas por servicio (7 valores × 3 servicios = 21 valores)
+        service_stats = sim_results["service_stats"]
+        for j, service_type in enumerate([1, 2, 3]):
+            service_name = {
+                1: "Servicio A (Uniforme)",
+                2: "Servicio B (Exponencial)",
+                3: "Sin Servicio"
+            }[service_type]
+            
+            stats = service_stats[service_name]
+            offset = 7 + j*7
+            results[i, offset] = stats["clients_served"]
+            results[i, offset+1] = stats["total_service_time"]
+            results[i, offset+2] = stats["avg_service_time"]
+            results[i, offset+3] = stats["total_queue_time"]
+            results[i, offset+4] = stats["avg_queue_time"]
+            results[i, offset+5] = stats["client_proportion"]
+            results[i, offset+6] = stats["total_sales"]
+    
+    return results
+
+def multiple_simulation_parallel(nSimulations, num_servers):
+    n_cpus = multiprocessing.cpu_count()
+    batch_sizes = [nSimulations // n_cpus] * n_cpus
+    for i in range(nSimulations % n_cpus):
+        batch_sizes[i] += 1
+
+    with ProcessPoolExecutor(max_workers=n_cpus) as executor:
+        futures = [executor.submit(run_simulation_batch, batch_size, num_servers) 
+                  for batch_size in batch_sizes]
+        results = np.vstack([f.result() for f in futures])
+
+    return results.mean(axis=0), results.std(axis=0)
+
+
+def generate_report_e(servers_range, num_simulations):
+    """Genera un reporte comparativo para diferentes números de servidores"""
+    with open('simulation_11e_report.txt', 'w') as f:
+        f.write("ANÁLISIS COMPARATIVO DE SIMULACIÓN - TIENDA DE ROPA\n")
+        f.write("="*80 + "\n\n")
+        f.write(f"Configuración: {num_simulations} simulaciones por número de servidores\n")
+        f.write("Parámetros fijos:\n")
+        f.write(f"- Tiempo límite: 480 min\n- Prob Servicio A: 0.5\n- Prob Servicio B: 0.3\n")
+        f.write(f"- Ventas Servicio A: $2500\n- Ventas Servicio B: $4000\n- Sin servicio: $0\n\n")
+        
+        for num_servers in servers_range:
+            # Ejecutar simulaciones para este número de servidores
+            time_start = time.time()
+            mean_results, std_results = multiple_simulation_parallel(num_simulations, num_servers)
+            time_end = time.time()
+            
+            f.write(f"\nRESULTADOS PARA {num_servers} SERVIDOR(ES)\n")
+            f.write("-"*80 + "\n")
+            
+            # Escribir estadísticas generales
+            f.write("\nESTADÍSTICAS GENERALES:\n")
+            f.write(f"• Retraso promedio: {mean_results[0]:.2f} ± {std_results[0]:.2f} min\n")
+            f.write(f"• Clientes en cola (promedio): {mean_results[1]:.2f} ± {std_results[1]:.2f}\n")
+            f.write(f"• Utilización de servidores: {mean_results[2]*100:.1f}% ± {std_results[2]*100:.1f}%\n")
+            f.write(f"• Tiempo total de simulación: {mean_results[3]:.1f} ± {std_results[3]:.1f} min\n")
+            f.write(f"• Tiempo después del cierre: {mean_results[4]:.1f} ± {std_results[4]:.1f} min\n")
+            f.write(f"• Ingresos totales: ${mean_results[5]:,.2f} ± ${std_results[5]:,.2f}\n")
+            f.write(f"• Venta promedio por cliente: ${mean_results[6]:.2f} ± ${std_results[6]:.2f}\n")
+            
+            # Escribir estadísticas por servicio
+            f.write("\nESTADÍSTICAS POR TIPO DE SERVICIO:\n")
+            services = {
+                1: "Servicio A (Uniforme)",
+                2: "Servicio B (Exponencial)",
+                3: "Sin Servicio"
+            }
+            
+            offset = 7  # Posición donde empiezan los datos de servicios
+            for serv_type in [1, 2, 3]:
+                idx = offset + (serv_type-1)*7
+                f.write(f"\n{services[serv_type]}:\n")
+                f.write(f"  • Clientes atendidos: {mean_results[idx]:.0f} ± {std_results[idx]:.0f}\n")
+                f.write(f"  • Tiempo servicio total: {mean_results[idx+1]:.1f} ± {std_results[idx+1]:.1f} min\n")
+                f.write(f"  • Tiempo servicio promedio: {mean_results[idx+2]:.2f} ± {std_results[idx+2]:.2f} min\n")
+                f.write(f"  • Tiempo en cola total: {mean_results[idx+3]:.1f} ± {std_results[idx+3]:.1f} min\n")
+                f.write(f"  • Tiempo en cola promedio: {mean_results[idx+4]:.2f} ± {std_results[idx+4]:.2f} min\n")
+                f.write(f"  • Proporción de clientes: {mean_results[idx+5]*100:.1f}% ± {std_results[idx+5]*100:.1f}%\n")
+                f.write(f"  • Ventas generadas: ${mean_results[idx+6]:,.2f} ± ${std_results[idx+6]:,.2f}\n")
+            
+            f.write(f"\nTiempo de simulación: {time_end-time_start:.2f} segundos\n")
+            f.write("-"*80 + "\n")
+
+if __name__ == "__main__":
+    num_simulations = 1000  # Número de simulaciones por configuración
+    max_servers = 5         # Número máximo de servidores a probar (1-5)
+    generate_report_e(range(1, max_servers + 1), num_simulations)
