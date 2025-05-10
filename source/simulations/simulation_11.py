@@ -252,9 +252,217 @@ class SimuladorAlmacen:
                 self.arrive()
             elif 2 <= self.next_event_type <= self.num_events:
                 self.depart()
-        return self.report() 
+        return self.report()
 
-def run_simulation_batch(n, servers):
+def run_simulation_batch_d(n, mean_interarrival):
+    """Versión modificada de run_simulation_batch para el reporte d"""
+    results = np.zeros((n, 28), dtype=np.float64)
+    
+    params = {
+        'num_servers': 1,  # Número fijo de servidores para este reporte
+        'mean_interarrival': mean_interarrival,  # Este parámetro varía
+        'mean_service_A_inf': 3.1,
+        'mean_service_A_sup': 3.8,
+        'mean_service_B': 7.0,
+        'mean_no_service_': 1.5,
+        'prob_service_A': 0.5,
+        'prob_service_B': 0.3,
+        'num_delays_required': 1000,
+        'time_limit': 480.0,
+        'sales_A': 2500,
+        'sales_B': 4000,
+        'sales_no_service': 0
+    }
+    
+    for i in range(n):
+        simulator = SimuladorAlmacen(params)
+        sim_results = simulator.main()
+        
+        # Estadísticas generales (7 valores)
+        general = sim_results["general_stats"]
+        results[i, 0] = general["avg_delay"]
+        results[i, 1] = general["avg_num_in_queue"]
+        results[i, 2] = general["server_utilization"]
+        results[i, 3] = general["total_sim_time"]
+        results[i, 4] = general["time_after_close"]
+        results[i, 5] = general["total_income"]
+        results[i, 6] = general["avg_sale_per_client"]
+        
+        # Estadísticas por servicio (7 valores × 3 servicios = 21 valores)
+        service_stats = sim_results["service_stats"]
+        for j, service_type in enumerate([1, 2, 3]):
+            service_name = {
+                1: "Servicio A (Uniforme)",
+                2: "Servicio B (Exponencial)",
+                3: "Sin Servicio"
+            }[service_type]
+            
+            stats = service_stats[service_name]
+            offset = 7 + j*7
+            results[i, offset] = stats["clients_served"]
+            results[i, offset+1] = stats["total_service_time"]
+            results[i, offset+2] = stats["avg_service_time"]
+            results[i, offset+3] = stats["total_queue_time"]
+            results[i, offset+4] = stats["avg_queue_time"]
+            results[i, offset+5] = stats["client_proportion"]
+            results[i, offset+6] = stats["total_sales"]
+    
+    return results
+
+def multiple_simulation_parallel_d(nSimulations, mean_interarrival):
+    """Versión modificada para el reporte d"""
+    n_cpus = multiprocessing.cpu_count()
+    batch_sizes = [nSimulations // n_cpus] * n_cpus
+    for i in range(nSimulations % n_cpus):
+        batch_sizes[i] += 1
+
+    with ProcessPoolExecutor(max_workers=n_cpus) as executor:
+        futures = [executor.submit(run_simulation_batch_d, batch_size, mean_interarrival) 
+                  for batch_size in batch_sizes]
+        results = np.vstack([f.result() for f in futures])
+
+    return results.mean(axis=0), results.std(axis=0)
+
+def generate_plots_d(interarrivals, data):
+    """Genera gráficas para el reporte d (diferentes tasas de llegada)"""
+    # Desempaquetar datos
+    avg_delays, avg_delays_std, total_incomes, total_incomes_std, time_after_closes, time_after_closes_std, server_utils, server_utils_std, service_proportions = data
+    
+    # Gráfica 1: Métricas principales
+    plt.figure(figsize=(14, 10))
+    
+    plt.subplot(2, 2, 1)
+    plt.errorbar(interarrivals, avg_delays, yerr=avg_delays_std, fmt='-o', capsize=5, color='tab:blue')
+    plt.title('Retraso promedio en cola')
+    plt.xlabel('Tiempo entre llegadas (min)')
+    plt.ylabel('Minutos')
+    plt.grid(True, linestyle='--', alpha=0.7)
+    
+    plt.subplot(2, 2, 2)
+    plt.errorbar(interarrivals, total_incomes, yerr=total_incomes_std, fmt='-o', capsize=5, color='tab:green')
+    plt.title('Ingresos totales')
+    plt.xlabel('Tiempo entre llegadas (min)')
+    plt.ylabel('Dólares ($)')
+    plt.grid(True, linestyle='--', alpha=0.7)
+    
+    plt.subplot(2, 2, 3)
+    plt.errorbar(interarrivals, time_after_closes, yerr=time_after_closes_std, fmt='-o', capsize=5, color='tab:red')
+    plt.title('Tiempo operando después de cierre')
+    plt.xlabel('Tiempo entre llegadas (min)')
+    plt.ylabel('Minutos')
+    plt.grid(True, linestyle='--', alpha=0.7)
+    
+    plt.subplot(2, 2, 4)
+    plt.errorbar(interarrivals, server_utils, yerr=server_utils_std, fmt='-o', capsize=5, color='tab:purple')
+    plt.title('Utilización del servidor')
+    plt.xlabel('Tiempo entre llegadas (min)')
+    plt.ylabel('Proporción')
+    plt.ylim(0, 1)
+    plt.grid(True, linestyle='--', alpha=0.7)
+    
+    plt.tight_layout()
+    plt.savefig('report_d_main_metrics.png')
+    plt.close()
+    
+    # Gráfica 2: Proporción de servicios
+    plt.figure(figsize=(10, 6))
+    width = 0.25
+    x = np.arange(len(interarrivals))
+    
+    for i, (service, color) in enumerate(zip(['A', 'B', 'Sin'], ['#2ecc71', '#3498db', '#e74c3c'])):
+        plt.bar(x + i*width, service_proportions[:,i], width, label=f'Servicio {service}', 
+                color=color, alpha=0.8, edgecolor='black')
+    
+    plt.title('Proporción de clientes por tipo de servicio')
+    plt.xlabel('Tiempo entre llegadas (min)')
+    plt.ylabel('Proporción')
+    plt.xticks(x + width, interarrivals)
+    plt.legend()
+    plt.grid(True, axis='y', linestyle='--', alpha=0.7)
+    plt.tight_layout()
+    plt.savefig('report_d_service_proportions.png')
+    plt.close()
+
+def generate_report_d(interarrival_times, num_simulations):
+    """Genera un reporte comparativo para diferentes tasas de llegada"""
+    all_means, all_stds = [], []
+    interarrivals = []
+    with open('simulation_11d_report.txt', 'w') as f:
+        f.write("ANÁLISIS COMPARATIVO DE SIMULACIÓN - TIENDA DE ROPA (TASAS DE LLEGADA)\n")
+        f.write("="*80 + "\n\n")
+        f.write(f"Configuración: {num_simulations} simulaciones por tasa de llegada\n")
+        f.write("Parámetros fijos:\n")
+        f.write(f"- Número de servidores: 1\n- Tiempo límite: 480 min\n")
+        f.write(f"- Prob Servicio A: 0.5\n- Prob Servicio B: 0.3\n")
+        f.write(f"- Ventas Servicio A: $2500\n- Ventas Servicio B: $4000\n- Sin servicio: $0\n\n")
+        
+        for interarrival in interarrival_times:
+            # Ejecutar simulaciones para esta tasa de llegada
+            time_start = time.time()
+            mean_results, std_results = multiple_simulation_parallel_d(num_simulations, interarrival)
+            time_end = time.time()
+            
+            f.write(f"\nRESULTADOS PARA TIEMPO ENTRE LLEGADAS DE {interarrival} MINUTOS\n")
+            f.write("-"*80 + "\n")
+            
+            # Escribir estadísticas generales
+            f.write("\nESTADÍSTICAS GENERALES:\n")
+            f.write(f"• Retraso promedio: {mean_results[0]:.2f} ± {std_results[0]:.2f} min\n")
+            f.write(f"• Clientes en cola (promedio): {mean_results[1]:.2f} ± {std_results[1]:.2f}\n")
+            f.write(f"• Utilización de servidores: {mean_results[2]*100:.1f}% ± {std_results[2]*100:.1f}%\n")
+            f.write(f"• Tiempo total de simulación: {mean_results[3]:.1f} ± {std_results[3]:.1f} min\n")
+            f.write(f"• Tiempo después del cierre: {mean_results[4]:.1f} ± {std_results[4]:.1f} min\n")
+            f.write(f"• Ingresos totales: ${mean_results[5]:,.2f} ± ${std_results[5]:,.2f}\n")
+            f.write(f"• Venta promedio por cliente: ${mean_results[6]:.2f} ± ${std_results[6]:.2f}\n")
+            
+            # Escribir estadísticas por servicio
+            f.write("\nESTADÍSTICAS POR TIPO DE SERVICIO:\n")
+            services = {
+                1: "Servicio A (Uniforme)",
+                2: "Servicio B (Exponencial)",
+                3: "Sin Servicio"
+            }
+            
+            offset = 7  # Posición donde empiezan los datos de servicios
+            for serv_type in [1, 2, 3]:
+                idx = offset + (serv_type-1)*7
+                f.write(f"\n{services[serv_type]}:\n")
+                f.write(f"  • Clientes atendidos: {mean_results[idx]:.0f} ± {std_results[idx]:.0f}\n")
+                f.write(f"  • Tiempo servicio total: {mean_results[idx+1]:.1f} ± {std_results[idx+1]:.1f} min\n")
+                f.write(f"  • Tiempo servicio promedio: {mean_results[idx+2]:.2f} ± {std_results[idx+2]:.2f} min\n")
+                f.write(f"  • Tiempo en cola total: {mean_results[idx+3]:.1f} ± {std_results[idx+3]:.1f} min\n")
+                f.write(f"  • Tiempo en cola promedio: {mean_results[idx+4]:.2f} ± {std_results[idx+4]:.2f} min\n")
+                f.write(f"  • Proporción de clientes: {mean_results[idx+5]*100:.1f}% ± {std_results[idx+5]*100:.1f}%\n")
+                f.write(f"  • Ventas generadas: ${mean_results[idx+6]:,.2f} ± ${std_results[idx+6]:,.2f}\n")
+            
+            f.write(f"\nTiempo de simulación: {time_end-time_start:.2f} segundos\n")
+            f.write("-"*80 + "\n")
+            interarrivals.append(interarrival)
+            all_means.append(mean_results)
+            all_stds.append(std_results)
+    avg_delays = [m[0] for m in all_means]
+    avg_delays_std = [s[0] for s in all_stds]
+    total_incomes = [m[5] for m in all_means]
+    total_incomes_std = [s[5] for s in all_stds]
+    time_after_closes = [m[4] for m in all_means]
+    time_after_closes_std = [s[4] for s in all_stds]
+    server_utils = [m[2] for m in all_means]
+    server_utils_std = [s[2] for s in all_stds]
+    
+    # Proporciones de servicios
+    service_proportions = np.zeros((len(interarrivals), 3))
+    for i, m in enumerate(all_means):
+        total = sum(m[7 + j*7] for j in range(3))  # Suma de clientes de todos los servicios
+        for j in range(3):
+            service_proportions[i,j] = m[7 + j*7] / total if total > 0 else 0
+    
+    # Generar gráficas
+    data = (avg_delays, avg_delays_std, total_incomes, total_incomes_std, 
+            time_after_closes, time_after_closes_std, server_utils, server_utils_std,
+            service_proportions)
+    generate_plots_d(interarrivals, data)
+
+def run_simulation_batch_e(n, servers):
     results = np.zeros((n, 28), dtype=np.float64)
     
     params = {
@@ -308,22 +516,83 @@ def run_simulation_batch(n, servers):
     
     return results
 
-def multiple_simulation_parallel(nSimulations, num_servers):
+def multiple_simulation_parallel_e(nSimulations, num_servers):
     n_cpus = multiprocessing.cpu_count()
     batch_sizes = [nSimulations // n_cpus] * n_cpus
     for i in range(nSimulations % n_cpus):
         batch_sizes[i] += 1
 
     with ProcessPoolExecutor(max_workers=n_cpus) as executor:
-        futures = [executor.submit(run_simulation_batch, batch_size, num_servers) 
+        futures = [executor.submit(run_simulation_batch_e, batch_size, num_servers) 
                   for batch_size in batch_sizes]
         results = np.vstack([f.result() for f in futures])
 
     return results.mean(axis=0), results.std(axis=0)
 
+def generate_plots_e(servers, data):
+    """Genera gráficas para el reporte e (diferentes servidores)"""
+    # Desempaquetar datos
+    avg_delays, avg_delays_std, total_incomes, total_incomes_std, time_after_closes, time_after_closes_std, server_utils, server_utils_std, service_proportions = data
+    
+    # Gráfica 1: Métricas principales
+    plt.figure(figsize=(14, 10))
+    
+    plt.subplot(2, 2, 1)
+    plt.errorbar(servers, avg_delays, yerr=avg_delays_std, fmt='-o', capsize=5, color='tab:blue')
+    plt.title('Retraso promedio en cola')
+    plt.xlabel('Número de servidores')
+    plt.ylabel('Minutos')
+    plt.grid(True, linestyle='--', alpha=0.7)
+    
+    plt.subplot(2, 2, 2)
+    plt.errorbar(servers, total_incomes, yerr=total_incomes_std, fmt='-o', capsize=5, color='tab:green')
+    plt.title('Ingresos totales')
+    plt.xlabel('Número de servidores')
+    plt.ylabel('Dólares ($)')
+    plt.grid(True, linestyle='--', alpha=0.7)
+    
+    plt.subplot(2, 2, 3)
+    plt.errorbar(servers, time_after_closes, yerr=time_after_closes_std, fmt='-o', capsize=5, color='tab:red')
+    plt.title('Tiempo operando después de cierre')
+    plt.xlabel('Número de servidores')
+    plt.ylabel('Minutos')
+    plt.grid(True, linestyle='--', alpha=0.7)
+    
+    plt.subplot(2, 2, 4)
+    plt.errorbar(servers, server_utils, yerr=server_utils_std, fmt='-o', capsize=5, color='tab:purple')
+    plt.title('Utilización promedio por servidor')
+    plt.xlabel('Número de servidores')
+    plt.ylabel('Proporción')
+    plt.ylim(0, 1)
+    plt.grid(True, linestyle='--', alpha=0.7)
+    
+    plt.tight_layout()
+    plt.savefig('report_e_main_metrics.png')
+    plt.close()
+    
+    # Gráfica 2: Proporción de servicios
+    plt.figure(figsize=(10, 6))
+    width = 0.25
+    x = np.arange(len(servers))
+    
+    for i, (service, color) in enumerate(zip(['A', 'B', 'Sin'], ['#2ecc71', '#3498db', '#e74c3c'])):
+        plt.bar(x + i*width, service_proportions[:,i], width, label=f'Servicio {service}', 
+                color=color, alpha=0.8, edgecolor='black')
+    
+    plt.title('Proporción de clientes por tipo de servicio')
+    plt.xlabel('Número de servidores')
+    plt.ylabel('Proporción')
+    plt.xticks(x + width, servers)
+    plt.legend()
+    plt.grid(True, axis='y', linestyle='--', alpha=0.7)
+    plt.tight_layout()
+    plt.savefig('report_e_service_proportions.png')
+    plt.close()
 
 def generate_report_e(servers_range, num_simulations):
     """Genera un reporte comparativo para diferentes números de servidores"""
+    all_means, all_stds = [], []
+    servers = []
     with open('simulation_11e_report.txt', 'w') as f:
         f.write("ANÁLISIS COMPARATIVO DE SIMULACIÓN - TIENDA DE ROPA\n")
         f.write("="*80 + "\n\n")
@@ -335,7 +604,7 @@ def generate_report_e(servers_range, num_simulations):
         for num_servers in servers_range:
             # Ejecutar simulaciones para este número de servidores
             time_start = time.time()
-            mean_results, std_results = multiple_simulation_parallel(num_simulations, num_servers)
+            mean_results, std_results = multiple_simulation_parallel_e(num_simulations, num_servers)
             time_end = time.time()
             
             f.write(f"\nRESULTADOS PARA {num_servers} SERVIDOR(ES)\n")
@@ -373,8 +642,34 @@ def generate_report_e(servers_range, num_simulations):
             
             f.write(f"\nTiempo de simulación: {time_end-time_start:.2f} segundos\n")
             f.write("-"*80 + "\n")
+            servers.append(num_servers)
+            all_means.append(mean_results)
+            all_stds.append(std_results)
+    avg_delays = [m[0] for m in all_means]
+    avg_delays_std = [s[0] for s in all_stds]
+    total_incomes = [m[5] for m in all_means]
+    total_incomes_std = [s[5] for s in all_stds]
+    time_after_closes = [m[4] for m in all_means]
+    time_after_closes_std = [s[4] for s in all_stds]
+    server_utils = [m[2] for m in all_means]
+    server_utils_std = [s[2] for s in all_stds]
+    
+    # Proporciones de servicios
+    service_proportions = np.zeros((len(servers), 3))
+    for i, m in enumerate(all_means):
+        total = sum(m[7 + j*7] for j in range(3))
+        for j in range(3):
+            service_proportions[i,j] = m[7 + j*7] / total if total > 0 else 0
+    
+    # Generar gráficas
+    data = (avg_delays, avg_delays_std, total_incomes, total_incomes_std, 
+            time_after_closes, time_after_closes_std, server_utils, server_utils_std,
+            service_proportions)
+    generate_plots_e(servers, data)
 
 if __name__ == "__main__":
     num_simulations = 1000  # Número de simulaciones por configuración
+    interarrival_times = [1.5, 3.0] 
     max_servers = 5         # Número máximo de servidores a probar (1-5)
+    generate_report_d(interarrival_times, num_simulations)
     generate_report_e(range(1, max_servers + 1), num_simulations)
