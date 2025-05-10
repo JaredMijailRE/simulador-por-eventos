@@ -1,0 +1,101 @@
+ANÁLISIS COMPARATIVO DE SIMULACIÓN - TIENDA DE ROPA (TASAS DE LLEGADA)
+================================================================================
+
+Configuración: 1000 simulaciones por tasa de llegada
+Parámetros fijos:
+- Número de servidores: 1
+- Tiempo límite: 480 min
+- Prob Servicio A: 0.5
+- Prob Servicio B: 0.3
+- Ventas Servicio A: $2500
+- Ventas Servicio B: $4000
+- Sin servicio: $0
+
+
+RESULTADOS PARA TIEMPO ENTRE LLEGADAS DE 1.5 MINUTOS
+--------------------------------------------------------------------------------
+
+ESTADÍSTICAS GENERALES:
+• Retraso promedio: 421.83 ± 57.99 min
+• Clientes en cola (promedio): 101.97 ± 10.99
+• Utilización de servidores: 99.8% ± 0.2%
+• Tiempo total de simulación: 1326.7 ± 107.5 min
+• Tiempo después del cierre: 846.7 ± 107.5 min
+• Ingresos totales: $786,791.50 ± $50,436.92
+• Venta promedio por cliente: $2448.71 ± $78.05
+
+ESTADÍSTICAS POR TIPO DE SERVICIO:
+
+Servicio A (Uniforme):
+  • Clientes atendidos: 160 ± 13
+  • Tiempo servicio total: 553.6 ± 44.7 min
+  • Tiempo servicio promedio: 3.45 ± 0.02 min
+  • Tiempo en cola total: 67964.8 ± 12570.0 min
+  • Tiempo en cola promedio: 421.97 ± 60.03 min
+  • Proporción de clientes: 49.9% ± 2.8%
+  • Ventas generadas: $401,127.50 ± $32,346.14
+
+Servicio B (Exponencial):
+  • Clientes atendidos: 96 ± 10
+  • Tiempo servicio total: 674.4 ± 98.6 min
+  • Tiempo servicio promedio: 6.99 ± 0.71 min
+  • Tiempo en cola total: 40882.8 ± 8868.5 min
+  • Tiempo en cola promedio: 420.42 ± 59.50 min
+  • Proporción de clientes: 30.0% ± 2.6%
+  • Ventas generadas: $385,664.00 ± $39,197.74
+
+Sin Servicio:
+  • Clientes atendidos: 64 ± 8
+  • Tiempo servicio total: 96.7 ± 12.1 min
+  • Tiempo servicio promedio: 1.50 ± 0.00 min
+  • Tiempo en cola total: 27334.5 ± 5627.5 min
+  • Tiempo en cola promedio: 423.61 ± 65.93 min
+  • Proporción de clientes: 20.1% ± 2.3%
+  • Ventas generadas: $0.00 ± $0.00
+
+Tiempo de simulación: 27.55 segundos
+--------------------------------------------------------------------------------
+
+RESULTADOS PARA TIEMPO ENTRE LLEGADAS DE 3.0 MINUTOS
+--------------------------------------------------------------------------------
+
+ESTADÍSTICAS GENERALES:
+• Retraso promedio: 99.40 ± 40.21 min
+• Clientes en cola (promedio): 23.37 ± 8.47
+• Utilización de servidores: 98.5% ± 1.6%
+• Tiempo total de simulación: 673.5 ± 73.3 min
+• Tiempo después del cierre: 193.5 ± 73.3 min
+• Ingresos totales: $393,633.00 ± $36,331.33
+• Venta promedio por cliente: $2451.13 ± $109.06
+
+ESTADÍSTICAS POR TIPO DE SERVICIO:
+
+Servicio A (Uniforme):
+  • Clientes atendidos: 80 ± 9
+  • Tiempo servicio total: 277.2 ± 31.8 min
+  • Tiempo servicio promedio: 3.45 ± 0.02 min
+  • Tiempo en cola total: 8153.4 ± 3795.4 min
+  • Tiempo en cola promedio: 99.80 ± 40.66 min
+  • Proporción de clientes: 50.0% ± 3.9%
+  • Ventas generadas: $200,805.00 ± $22,933.92
+
+Servicio B (Exponencial):
+  • Clientes atendidos: 48 ± 7
+  • Tiempo servicio total: 338.4 ± 67.8 min
+  • Tiempo servicio promedio: 7.02 ± 1.01 min
+  • Tiempo en cola total: 4863.5 ± 2424.1 min
+  • Tiempo en cola promedio: 97.67 ± 39.65 min
+  • Proporción de clientes: 30.0% ± 3.6%
+  • Ventas generadas: $192,828.00 ± $27,542.59
+
+Sin Servicio:
+  • Clientes atendidos: 32 ± 6
+  • Tiempo servicio total: 48.1 ± 8.3 min
+  • Tiempo servicio promedio: 1.50 ± 0.00 min
+  • Tiempo en cola total: 3255.7 ± 1542.7 min
+  • Tiempo en cola promedio: 100.97 ± 42.94 min
+  • Proporción de clientes: 20.0% ± 3.1%
+  • Ventas generadas: $0.00 ± $0.00
+
+Tiempo de simulación: -0.57 segundos
+--------------------------------------------------------------------------------
